@@ -2,6 +2,7 @@ import { Controller, Post, Body, UseGuards, Get, Param } from '@nestjs/common';
 import { TransactionsService } from './transaction.service';
 import { CreateDepositDto } from './dto/create-deposit.dto';
 import { CreateTransferDto } from './dto/create-transfer.dto';
+import { ReverseTransactionDto } from './dto/reverse-transaction.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { GetUser } from 'src/common/decorators/GetUser.decorator';
 
@@ -24,6 +25,14 @@ export class TransactionsController {
     @GetUser('id') userId: string,
   ) {
     return this.transactionsService.transfer(dto, userId);
+  }
+
+  @Post('reverse/:transactionId')
+  reverse(
+    @Param() dto: ReverseTransactionDto,
+    @GetUser('id') userId: string,
+  ) {
+    return this.transactionsService.reverse(dto, userId);
   }
 
   @Get('history')

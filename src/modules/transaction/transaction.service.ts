@@ -2,14 +2,17 @@ import { Injectable, NotFoundException, BadRequestException, ForbiddenException 
 import { PrismaService } from 'src/services/prisma.service';
 import { CreateDepositDto } from './dto/create-deposit.dto';
 import { CreateTransferDto } from './dto/create-transfer.dto';
+import { ReverseTransactionDto } from './dto/reverse-transaction.dto';
 import { TransactionStatus, TransactionType } from '@prisma/client';
 import { UserService } from '../user/user.service';
+import { ReversalStrategyFactory } from './strategies/reversal-strategy.factory';
 
 @Injectable()
 export class TransactionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userService: UserService,
+    private readonly reversalStrategyFactory: ReversalStrategyFactory,
   ) {}
 
   public async deposit(dto: CreateDepositDto, userId: string) {
@@ -64,6 +67,30 @@ export class TransactionsService {
     ]);
 
     return transaction;
+  }
+
+  public async reverse(dto: ReverseTransactionDto, userId: string) {
+    const transaction = await this.findTransactionOrThrowById(dto.transactionId);
+
+    if (transaction.status === TransactionStatus.REVERSED) {
+      throw new BadRequestException('Transação já foi revertida');
+    }
+
+    if (transaction.type === TransactionType.REVERSAL) {
+      throw new BadRequestException('Não é possível reverter uma transação de reversão');
+    }
+
+    const isSenderOrReceiver = transaction.fromUserId === userId || transaction.toUserId === userId;
+    if (!isSenderOrReceiver) {
+      throw new ForbiddenException('Você não tem permissão para reverter esta transação');
+    }
+
+    const strategy = this.reversalStrategyFactory.getStrategy(transaction);
+    const operations = strategy.execute(transaction);
+
+    await this.prisma.$transaction(operations);
+
+    return { message: 'Transação revertida com sucesso' };
   }
 
   public async getTransactionHistory(userId: string) {
