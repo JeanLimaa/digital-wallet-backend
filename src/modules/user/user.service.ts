@@ -14,6 +14,10 @@ export class UserService {
   }
 
   public async findByEmail(email: string) {
+    return this.prisma.user.findUnique({ where: { email } });
+  }
+
+  public async findOrThrowByEmail(email: string) {
     const user = this.prisma.user.findUnique({ where: { email } });
 
     if (!user) {
@@ -23,7 +27,7 @@ export class UserService {
     return user;
   }
 
-  public async findById(id: string) {
+  public async findOrThrowById(id: string) {
     const user = this.prisma.user.findUnique({ where: { id } });
 
     if (!user) {
@@ -34,7 +38,7 @@ export class UserService {
   }
 
   public async getProfile(userId: string) {
-    const user = await this.findById(userId);
+    const user = await this.findOrThrowById(userId);
 
     return {
       id: user.id,
@@ -44,7 +48,7 @@ export class UserService {
   }
 
   public async getProfileByEmail(email: string) {
-    const user = await this.findByEmail(email);
+    const user = await this.findOrThrowByEmail(email);
 
     return {
       name: user.name,
@@ -53,10 +57,7 @@ export class UserService {
   }
 
   public async getBalance(userId: string) {
-    const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException('Usuário não encontrado');
-    }
+    const user = await this.findOrThrowById(userId);
 
     if (user.id !== userId) {
       throw new ForbiddenException('Você não tem permissão para acessar este recurso');	

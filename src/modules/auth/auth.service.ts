@@ -4,7 +4,6 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from 'src/services/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -33,7 +32,7 @@ export class AuthService {
   }
 
   public async login(dto: LoginDto) {
-    const user = await this.userService.findByEmail(dto.email);
+    const user = await this.userService.findOrThrowByEmail(dto.email);
 
     if (!user) throw new UnauthorizedException('Não foi encontrado um usuário com esse e-mail');
 
