@@ -6,14 +6,14 @@ import * as bcrypt from 'bcrypt';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async createUser(name: string, email: string, password: string) {
+  public async createUser(name: string, email: string, password: string) {
     const passwordHash = await bcrypt.hash(password, 10);
     return this.prisma.user.create({
       data: { name, email, passwordHash },
     });
   }
 
-  async findByEmail(email: string) {
+  public async findByEmail(email: string) {
     const user = this.prisma.user.findUnique({ where: { email } });
 
     if (!user) {
@@ -23,7 +23,7 @@ export class UserService {
     return user;
   }
 
-  async findById(id: string) {
+  public async findById(id: string) {
     const user = this.prisma.user.findUnique({ where: { id } });
 
     if (!user) {
