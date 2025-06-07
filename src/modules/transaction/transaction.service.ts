@@ -95,7 +95,7 @@ export class TransactionsService {
 
   public async getTransactionHistory(userId: string) {
     await this.userService.findOrThrowById(userId);
-
+    
     const transactions = await this.prisma.transaction.findMany({
       where: {
         OR: [
@@ -110,11 +110,39 @@ export class TransactionsService {
             email: true,
             name: true,
           }
+        },
+        fromUser: {
+          select: {
+            email: true,
+            name: true,
+          }
+        },
+        reversedTransaction: {
+          select: {
+            id: true,
+            amount: true,
+            type: true,
+            createdAt: true,
+          }
         }
       }
     });
 
-    return transactions;
+    // Se o user é quem recebeu o depósito/transferencia, tipo vira RECEIVED
+    const adjustedTransactions = transactions.map(tx => {
+      const isReceived = tx.type === 'TRANSFER' && tx.toUserId === userId && tx.fromUserId !== userId;
+      const isPositive = 
+        tx.type === 'DEPOSIT' 
+        || (tx.type === 'TRANSFER' && tx.toUserId === userId)
+        || (tx.type === 'REVERSAL' && tx.reversedTransaction.type === "TRANSFER" && tx.toUserId === userId);
+      
+      const received = {...tx, isPositive, type: 'RECEIVED'};
+      if (isReceived) return received
+      
+      return {...tx, isPositive};
+    });
+
+    return adjustedTransactions;
   }
 
   private async findTransactionOrThrowById(id: string) {
