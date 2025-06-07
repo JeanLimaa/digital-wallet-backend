@@ -40,5 +40,9 @@ model Transaction {
   toUserId    String?
   status      TransactionStatus @default(COMPLETED)
   createdAt   DateTime @default(now())
+
   reversedTransactionId String? 
+  reversedTransaction Transaction? @relation("ReversalRelation", fields: [reversedTransactionId], references: [id])
+  
+  reversals            Transaction[] @relation("ReversalRelation")
 }
