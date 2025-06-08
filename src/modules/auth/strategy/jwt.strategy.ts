@@ -12,7 +12,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (req: RequestWithCookies) => req.cookies?.token
+        ExtractJwt.fromAuthHeaderAsBearerToken()
       ]),
       ignoreExpiration: process.env.NODE_ENV === 'development' ? true : false,
       secretOrKey: process.env.JWT_SECRET || 'secretKey',
