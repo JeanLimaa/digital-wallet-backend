@@ -8,18 +8,17 @@ import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 export class UserController {
     constructor(private readonly userService: UserService) {}
 
-    @Get('profile/:email')
-    getProfile(
-        @Param('email') email: string,
-    ) {
-        return this.userService.getProfileByEmail(email);
-    }
-
     @Get('profile/me')
     getMyProfile(
         @GetUser('id') userId: string,
     ) {
         return this.userService.getProfile(userId);
+    }
+    @Get('profile/:email')
+    getProfile(
+        @Param('email') email: string,
+    ) {
+        return this.userService.getProfileByEmail(email);
     }
 
     @Get('balance')
